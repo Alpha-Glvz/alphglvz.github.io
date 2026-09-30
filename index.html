@@ -54,39 +54,58 @@
         const pantalla = document.getElementById('pantalla');
         const btnHablar = document.getElementById('btnHablar');
         const btnLimpiar = document.getElementById('btnLimpiar');
-
-        // Usa la API nativa de Android/Chrome
+    
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
-            recognition.lang = 'es-MX';
-            recognition.interimResults = false; // Solo muestra el texto final para evitar parpadeos
-
+            recognition.lang = 'es-MX'; 
+            recognition.continuous = true;      // Sigue escuchando aunque hagas pausas
+            recognition.interimResults = true;  // Muestra resultados parciales
+    
+            let textoFinal = '';
+    
             recognition.onstart = () => {
-                pantalla.style.color = "#81c784";
-                pantalla.innerText = "Escuchando...";
+                pantalla.innerHTML = "<span style='color: #81c784;'>Escuchando... (Toca limpiar para detener)</span>";
+                textoFinal = ''; // Reinicia el texto al volver a hablar
             };
-
+    
             recognition.onresult = (event) => {
-                pantalla.style.color = "#ffffff";
-                pantalla.innerText = event.results[0][0].transcript;
+                let textoInterino = '';
+                textoFinal = '';
+    
+                // Separa lo que ya entendió de lo que está procesando
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        textoFinal += event.results[i][0].transcript;
+                    } else {
+                        textoInterino += event.results[i][0].transcript;
+                    }
+                }
+                
+                // El texto final sale blanco, el que está procesando sale gris
+                pantalla.innerHTML = `<span style="color: #ffffff;">${textoFinal}</span><span style="color: #888888;">${textoInterino}</span>`;
             };
-
-            recognition.onerror = () => {
-                pantalla.innerText = "No se escuchó bien, intenta de nuevo.";
+    
+            recognition.onerror = (event) => {
+                if (event.error !== 'no-speech') {
+                    pantalla.innerText = "Error al escuchar. Intenta de nuevo.";
+                }
             };
-
+    
             btnHablar.addEventListener('click', () => {
                 recognition.start();
             });
+    
+            btnLimpiar.addEventListener('click', () => {
+                recognition.stop(); // Detiene el micrófono
+                pantalla.innerText = "";
+                textoFinal = '';
+            });
+    
         } else {
             pantalla.innerText = "Tu navegador no soporta el dictado por voz.";
         }
-
-        btnLimpiar.addEventListener('click', () => {
-            pantalla.innerText = "";
-        });
     </script>
 </body>
 </html>
