@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Comunicador</title>
+    <style>
+        body { 
+            background-color: #121212; 
+            color: #ffffff; 
+            font-family: sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+        }
+        #pantalla {
+            flex-grow: 1;
+            padding: 30px;
+            font-size: 8vh; /* Letra dinámica gigante */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow-y: auto;
+        }
+        .controles {
+            display: flex;
+            height: 20vh;
+            min-height: 100px;
+        }
+        button {
+            flex: 1;
+            font-size: 2rem;
+            border: none;
+            font-weight: bold;
+            color: white;
+        }
+        #btnHablar { background-color: #2e7d32; }
+        #btnLimpiar { background-color: #c62828; }
+        button:active { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <div id="pantalla">Toca 'Hablar' para dictar</div>
+    
+    <div class="controles">
+        <button id="btnHablar">🎤 Hablar</button>
+        <button id="btnLimpiar">🗑️ Limpiar</button>
+    </div>
+
+    <script>
+        const pantalla = document.getElementById('pantalla');
+        const btnHablar = document.getElementById('btnHablar');
+        const btnLimpiar = document.getElementById('btnLimpiar');
+
+        // Usa la API nativa de Android/Chrome
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-MX';
+            recognition.interimResults = false; // Solo muestra el texto final para evitar parpadeos
+
+            recognition.onstart = () => {
+                pantalla.style.color = "#81c784";
+                pantalla.innerText = "Escuchando...";
+            };
+
+            recognition.onresult = (event) => {
+                pantalla.style.color = "#ffffff";
+                pantalla.innerText = event.results[0][0].transcript;
+            };
+
+            recognition.onerror = () => {
+                pantalla.innerText = "No se escuchó bien, intenta de nuevo.";
+            };
+
+            btnHablar.addEventListener('click', () => {
+                recognition.start();
+            });
+        } else {
+            pantalla.innerText = "Tu navegador no soporta el dictado por voz.";
+        }
+
+        btnLimpiar.addEventListener('click', () => {
+            pantalla.innerText = "";
+        });
+    </script>
+</body>
+</html>
